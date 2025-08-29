@@ -1,0 +1,7 @@
+﻿# ignore settings
+.git/
+.github/
+.idea/
+k8s-deploy/
+docker-compose.yml
+appsettings.Production.json
