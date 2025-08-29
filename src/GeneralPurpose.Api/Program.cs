@@ -22,6 +22,7 @@ var isDevEnv = ApplicationUtils.IsDevelopmentEnvironment(configurationRoot["Envi
 Log.Logger = new LoggerConfiguration()
 #if Release
     .MinimumLevel.Information()
+    .WriteToSeq(configurationRoot.GetSection("AppLogging"))
 #endif
     .ReadFrom.Configuration(configurationRoot)
     .Enrich.WithExceptionDetails()
@@ -70,12 +71,12 @@ builder.Services.AddControllers(o => o.Filters.Add<ExceptionsFilter>())
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 if (isDevEnv)
 {
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "GeneralPurpose.Api", Version = "v1" });
-    c.DescribeAllParametersInCamelCase();
-});
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new OpenApiInfo { Title = "GeneralPurpose.Api", Version = "v1" });
+        c.DescribeAllParametersInCamelCase();
+    });
 }
 
 var app = builder.Build();
