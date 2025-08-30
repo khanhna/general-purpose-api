@@ -12,7 +12,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 const string corsPolicyName = "simplePolicy";
 
 var configurationRoot = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true)
     .Build();
@@ -20,12 +20,9 @@ var configurationRoot = new ConfigurationBuilder()
 var isDevEnv = ApplicationUtils.IsDevelopmentEnvironment(configurationRoot["Environment"]);
 
 Log.Logger = new LoggerConfiguration()
-#if Release
-    .MinimumLevel.Information()
-    .WriteToSeq(configurationRoot.GetSection("AppLogging"))
-#endif
     .ReadFrom.Configuration(configurationRoot)
     .Enrich.WithExceptionDetails()
+    .WriteToSeq(configurationRoot.GetSection("AppLogging"))
 #if DEBUG
     .WriteTo.Console()
 #endif
