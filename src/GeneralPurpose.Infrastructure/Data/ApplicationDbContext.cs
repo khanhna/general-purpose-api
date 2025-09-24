@@ -66,9 +66,13 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
 
         modelBuilder.Entity<AppSystem>().HasMany(x => x.WorkingUnits).WithOne(x => x.AppSystem)
             .HasForeignKey(x => x.SystemId);
+        modelBuilder.Entity<AppSystem>().HasMany(x => x.ImageCompositionConfigs).WithOne(x => x.AppSystem)
+            .HasForeignKey(x => x.AppSystemId);
 
         modelBuilder.Entity<WorkingUnit>().HasMany(x => x.Transactions).WithOne(x => x.WorkingUnit)
             .HasForeignKey(x => x.WorkingUnitId);
+        modelBuilder.Entity<WorkingUnit>().HasOne(x => x.ImageVintageProcessConfig).WithOne(x => x.WorkingUnit)
+            .HasForeignKey<ImageVintageProcessConfig>(x => x.WorkingUnitId);
 
         base.OnModelCreating(modelBuilder);
     }

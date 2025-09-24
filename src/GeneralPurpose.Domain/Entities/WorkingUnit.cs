@@ -11,8 +11,12 @@ public class WorkingUnit : Entity<int>, IAggregateRoot
     public string? Identifier { get; set; }
     public bool IsActive { get; set; }
     public DateTime? ExpireAt { get; set; }
+    public bool SkinRetouchEnabled { get; set; }
+    public bool FaceSlimmingEnabled { get; set; }
+    public bool VintageProcessEnabled { get; set; }
 
     public AppSystem? AppSystem { get; set; }
+    public ImageVintageProcessConfig? ImageVintageProcessConfig { get; set; }
 
     public List<Transaction>? Transactions { get; set; }
 }
