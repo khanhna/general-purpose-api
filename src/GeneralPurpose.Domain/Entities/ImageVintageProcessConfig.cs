@@ -5,6 +5,7 @@ namespace GeneralPurpose.Domain.Entities;
 public class ImageVintageProcessConfig : Entity<int>, IAggregateRoot
 {
     public int? WorkingUnitId { get; set; }
+    public ImageVintageProcessConfigProfile Code { get; set; }
     public decimal Contrast { get; set; }
     public decimal Grain { get; set; }
     public decimal Vignette { get; set; }
@@ -18,6 +19,12 @@ public class ImageVintageProcessConfig : Entity<int>, IAggregateRoot
     public int GreenAdjustment { get; set; }
     public int BlueAdjustment { get; set; }
     public decimal Brightness { get; set; }
+    public bool IsActive { get; set; }
 
     public WorkingUnit? WorkingUnit { get; set; }
+}
+
+public enum ImageVintageProcessConfigProfile
+{
+    Default
 }

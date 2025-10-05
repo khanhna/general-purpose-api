@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GeneralPurpose.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250923151729_AddImageProcessConfig")]
+    [Migration("20251004105423_AddImageProcessConfig")]
     partial class AddImageProcessConfig
     {
         /// <inheritdoc />
@@ -117,6 +117,11 @@ namespace GeneralPurpose.Infrastructure.Data.Migrations
 
                     b.Property<decimal>("Brightness")
                         .HasColumnType("numeric");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<decimal>("Contrast")
                         .HasColumnType("numeric");

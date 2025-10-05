@@ -10,10 +10,12 @@ public class ImageVintageProcessConfiguration : IEntityTypeConfiguration<ImageVi
     {
         builder.ToTable("ImageVintageProcessConfigs");
         builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Code).HasMaxLength(16).HasConversion<string>();
+        builder.Property(x => x.LastUpdatedTime).HasPrecision(0);
         
         builder.Ignore(x => x.CreatedBy);
         builder.Ignore(x => x.CreatedTime);
         builder.Ignore(x => x.LastUpdatedBy);
-        builder.Ignore(x => x.LastUpdatedTime);
     }
 }

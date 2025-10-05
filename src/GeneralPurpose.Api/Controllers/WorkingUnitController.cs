@@ -14,8 +14,12 @@ namespace GeneralPurpose.Api.Controllers;
 [Route("WorkingUnits")]
 public class WorkingUnitController: BaseController
 {
-    [HttpGet("status")]
-    public async Task<IActionResult> GetWorkingUnitStatus([FromServices] IRepository<WorkingUnit, int> workingUnitRepository, CancellationToken cancellationToken)
+    [HttpGet("Status")]
+    public async Task<IActionResult> GetWorkingUnitStatus(
+        [FromServices] IRepository<WorkingUnit, int> workingUnitRepository,
+        [FromServices] IRepository<ImageVintageProcessConfig, int> imageVintageProcessConfigRepository,
+        [FromServices] IRepository<ImageCompositionConfig, int> imageCompositionConfigRepository,
+        CancellationToken cancellationToken)
     {
         var workingUnitId = HttpContext.GetClientMachineHeader();
         if (string.IsNullOrEmpty(workingUnitId) || workingUnitId.Length > 32)
@@ -23,38 +27,75 @@ public class WorkingUnitController: BaseController
 
         var workingUnit = await workingUnitRepository.FirstOrDefaultAsync(x => x.Identifier == workingUnitId,
             x => x.Include(w => w.AppSystem).ThenInclude(a => a.ImageCompositionConfigs)
-                .Include(w => w.ImageVintageProcessConfig), true, cancellationToken);
-
+                .Include(w => w.ImageVintageProcessConfigs), true, cancellationToken);
         if (workingUnit?.Id == null) return BadRequest($"Working unit {workingUnitId} is not found!.");
 
+        var generalVintageConfigs = await imageVintageProcessConfigRepository.ListAsync(
+            x => x.WorkingUnitId == null && x.IsActive, isNoTracking: true, cancellationToken: cancellationToken);
+        var generalCompositionConfigs = await imageCompositionConfigRepository.ListAsync(
+            x => x.AppSystemId == null && x.IsActive, isNoTracking: true, cancellationToken: cancellationToken);
+        var generalVintageConfigCodes = generalVintageConfigs?.Select(x => x.Code).ToHashSet() ?? [];
+        var generalCompositionConfigFileNames = generalCompositionConfigs?.Select(x => x.FileName).ToHashSet() ?? [];
+
+        for (var i = 0; i < generalVintageConfigs!.Count; i++)
+        {
+            var specificConfig =
+                workingUnit?.ImageVintageProcessConfigs?.FirstOrDefault(x =>
+                    x.Code == generalVintageConfigs[i].Code && x.IsActive);
+            if(specificConfig?.Id == null) continue;
+
+            generalVintageConfigs[i] = specificConfig;
+        }
+        
+        generalVintageConfigs.AddRange(
+            workingUnit?.ImageVintageProcessConfigs?.Where(x =>
+                !generalVintageConfigCodes.Contains(x.Code) && x.IsActive) ?? []);
+
+        for (var i = 0; i < generalCompositionConfigs!.Count; i++)
+        {
+            var specificConfig =
+                workingUnit?.AppSystem?.ImageCompositionConfigs?.FirstOrDefault(x =>
+                    x.FileName == generalCompositionConfigs[i].FileName && x.IsActive);
+            if(specificConfig?.Id == null) continue;
+
+            generalCompositionConfigs[i] = specificConfig;
+        }
+
+        generalCompositionConfigs.AddRange(
+            workingUnit?.AppSystem?.ImageCompositionConfigs?.Where(x =>
+                !generalCompositionConfigFileNames.Contains(x.FileName) && x.IsActive) ?? []);
+        
         return Ok(new WorkingUnitStatusResponse
         {
-            IsActive = workingUnit.IsActive,
+            IsActive = workingUnit!.IsActive,
             ExpiryDate = workingUnit.ExpireAt,
             Note = workingUnit.Note,
             SkinRetouchEnabled = workingUnit.SkinRetouchEnabled,
             VintageProcessEnabled = workingUnit.VintageProcessEnabled,
-            ImageVintageConfig = workingUnit.VintageProcessEnabled && workingUnit.ImageVintageProcessConfig?.Id != null
-                ? new ImageVintageConfig
-                {
-                    Contrast = workingUnit.ImageVintageProcessConfig.Contrast,
-                    Grain = workingUnit.ImageVintageProcessConfig.Grain,
-                    Vignette = workingUnit.ImageVintageProcessConfig.Vignette,
-                    Fade = workingUnit.ImageVintageProcessConfig.Fade,
-                    TintIntensity = workingUnit.ImageVintageProcessConfig.TintIntensity,
-                    Dust = workingUnit.ImageVintageProcessConfig.Dust,
-                    Scratches = workingUnit.ImageVintageProcessConfig.Scratches,
-                    Hairs = workingUnit.ImageVintageProcessConfig.Hairs,
-                    Blur = workingUnit.ImageVintageProcessConfig.Blur,
-                    RedAdjustment = Convert.ToDecimal(workingUnit.ImageVintageProcessConfig.RedAdjustment) / 255,
-                    GreenAdjustment = Convert.ToDecimal(workingUnit.ImageVintageProcessConfig.GreenAdjustment) / 255,
-                    BlueAdjustment = Convert.ToDecimal(workingUnit.ImageVintageProcessConfig.BlueAdjustment) / 255,
-                    Brightness = workingUnit.ImageVintageProcessConfig.Brightness
-                }
-                : null,
+            ImageVintageConfigs = workingUnit.VintageProcessEnabled && generalVintageConfigs.Count > 0
+                ? generalVintageConfigs.Where(x => x.IsActive).Select(x =>
+                    new ImageVintageConfig
+                    {
+                        Code = x.Code.ToString(),
+                        Contrast = x.Contrast,
+                        Grain = x.Grain,
+                        Vignette = x.Vignette,
+                        Fade = x.Fade,
+                        TintIntensity = x.TintIntensity,
+                        Dust = x.Dust,
+                        Scratches = x.Scratches,
+                        Hairs = x.Hairs,
+                        Blur = x.Blur,
+                        RedAdjustment = x.RedAdjustment,
+                        GreenAdjustment = x.GreenAdjustment,
+                        BlueAdjustment = x.BlueAdjustment,
+                        Brightness = x.Brightness,
+                        LastUpdatedTime = x.LastUpdatedTime
+                    }).ToArray()
+                : [],
             ImageCompositionConfigs =
-                workingUnit.VintageProcessEnabled && workingUnit.AppSystem?.ImageCompositionConfigs?.Count > 0
-                    ? workingUnit.AppSystem.ImageCompositionConfigs.Where(x => x.IsActive).Select(x =>
+                workingUnit.VintageProcessEnabled && generalCompositionConfigs.Count > 0
+                    ? generalCompositionConfigs.Where(x => x.IsActive).Select(x =>
                         new ImageCompositionConfigResponse
                         {
                             BlendMode = x.BlendMode,
@@ -62,13 +103,14 @@ public class WorkingUnitController: BaseController
                             Feather = x.Feather,
                             Threshold = x.Threshold,
                             Opacity = x.Opacity,
-                            InvertThreshold = x.InvertThreshold
+                            InvertThreshold = x.InvertThreshold,
+                            LastUpdatedTime = x.LastUpdatedTime
                         }).ToArray()
                     : []
         });
     }
 
-    [HttpPost("sync-transactions")]
+    [HttpPost("SyncTransactions")]
     public async Task<IActionResult> SyncTransactions([FromBody] SyncTransactionsRequest request, [FromServices] IMediator mediator,
         CancellationToken cancellationToken)
     {
@@ -77,7 +119,7 @@ public class WorkingUnitController: BaseController
         return result.Match(Ok, ForwardGeneralResponse);
     }
 
-    [HttpPost("test/GenerateSignature")]
+    [HttpPost("Test/GenerateSignature")]
     public IActionResult GenerateSignature([FromBody] TestGenerateSignatureRequest request)
     {
         return Ok(new TestGenerateSignatureResponse
@@ -88,7 +130,7 @@ public class WorkingUnitController: BaseController
         });
     }
     
-    [HttpPost("test/ValidateGenerateSignature")]
+    [HttpPost("Test/ValidateGenerateSignature")]
     public IActionResult ValidateSignature([FromBody] TestGenerateSignatureResponse request)
     {
         return Ok(SecurityHelper.IsValidSignature(request.Sig, request.Identifier, request.CurrenTime));

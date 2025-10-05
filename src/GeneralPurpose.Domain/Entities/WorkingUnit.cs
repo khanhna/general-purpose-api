@@ -16,7 +16,7 @@ public class WorkingUnit : Entity<int>, IAggregateRoot
     public bool VintageProcessEnabled { get; set; }
 
     public AppSystem? AppSystem { get; set; }
-    public ImageVintageProcessConfig? ImageVintageProcessConfig { get; set; }
+    public List<ImageVintageProcessConfig>? ImageVintageProcessConfigs { get; set; }
 
     public List<Transaction>? Transactions { get; set; }
 }

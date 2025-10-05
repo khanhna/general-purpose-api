@@ -13,10 +13,10 @@ public class ImageCompositionConfiguration : IEntityTypeConfiguration<ImageCompo
         
         builder.Property(x => x.FileName).HasMaxLength(32).IsRequired();
         builder.Property(x => x.BlendMode).HasMaxLength(16).IsRequired();
+        builder.Property(x => x.LastUpdatedTime).HasPrecision(0);
         
         builder.Ignore(x => x.CreatedBy);
         builder.Ignore(x => x.CreatedTime);
         builder.Ignore(x => x.LastUpdatedBy);
-        builder.Ignore(x => x.LastUpdatedTime);
     }
 }

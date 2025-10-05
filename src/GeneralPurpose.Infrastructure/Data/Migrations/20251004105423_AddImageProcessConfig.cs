@@ -64,6 +64,7 @@ namespace GeneralPurpose.Infrastructure.Data.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     WorkingUnitId = table.Column<int>(type: "integer", nullable: true),
+                    Code = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
                     Contrast = table.Column<decimal>(type: "numeric", nullable: false),
                     Grain = table.Column<decimal>(type: "numeric", nullable: false),
                     Vignette = table.Column<decimal>(type: "numeric", nullable: false),

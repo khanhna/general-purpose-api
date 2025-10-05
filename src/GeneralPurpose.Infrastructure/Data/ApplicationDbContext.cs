@@ -71,8 +71,8 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
 
         modelBuilder.Entity<WorkingUnit>().HasMany(x => x.Transactions).WithOne(x => x.WorkingUnit)
             .HasForeignKey(x => x.WorkingUnitId);
-        modelBuilder.Entity<WorkingUnit>().HasOne(x => x.ImageVintageProcessConfig).WithOne(x => x.WorkingUnit)
-            .HasForeignKey<ImageVintageProcessConfig>(x => x.WorkingUnitId);
+        modelBuilder.Entity<WorkingUnit>().HasMany(x => x.ImageVintageProcessConfigs).WithOne(x => x.WorkingUnit)
+            .HasForeignKey(x => x.WorkingUnitId);
 
         base.OnModelCreating(modelBuilder);
     }
@@ -231,7 +231,7 @@ public class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContextFactory
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseNpgsql("Server=172.25.157.236;Port=5432;Database=general_purpose;User Id=admin;Password=p@ssWoRd!;");
+        optionsBuilder.UseNpgsql("");
 
         return new ApplicationDbContext(optionsBuilder.Options, null!, null!);
     }
