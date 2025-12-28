@@ -2,17 +2,13 @@
 
 namespace GeneralPurpose.Domain.Entities;
 
-public class ImageCompositionConfig : Entity<int>, IAggregateRoot
+public class ImageLutCubeSetting : Entity<int>, IAggregateRoot
 {
     public int? AppSystemId { get; set; }
+    public string Code { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
-    public string BlendMode { get; set; } = string.Empty;
-    public int Threshold { get; set; }
-    public int Feather { get; set; }
-    public decimal Opacity { get; set; }
-    public bool InvertThreshold { get; set; }
     public string Url { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-
+    
     public AppSystem? AppSystem { get; set; }
 }

@@ -4,18 +4,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GeneralPurpose.Infrastructure.Data.EntityConfigurations;
 
-public class ImageCompositionConfiguration : IEntityTypeConfiguration<ImageCompositionConfig>
+public class LutCubeSettingConfiguration : IEntityTypeConfiguration<ImageLutCubeSetting>
 {
-    public void Configure(EntityTypeBuilder<ImageCompositionConfig> builder)
+    public void Configure(EntityTypeBuilder<ImageLutCubeSetting> builder)
     {
-        builder.ToTable("ImageCompositionConfigs");
+        builder.ToTable("ImageLutCubeSettings");
         builder.HasKey(x => x.Id);
         
-        builder.Property(x => x.FileName).HasMaxLength(32).IsRequired();
-        builder.Property(x => x.BlendMode).HasMaxLength(16).IsRequired();
+        builder.Property(x => x.Code).HasMaxLength(16).IsRequired();
+        builder.Property(x => x.FileName).HasMaxLength(64).IsRequired();
         builder.Property(x => x.Url).HasMaxLength(1024).IsRequired();
         builder.Property(x => x.LastUpdatedTime).HasPrecision(0);
         
+        builder.HasIndex(x  => x.Code);
         builder.HasIndex(x  => x.FileName).IsUnique();
         
         builder.Ignore(x => x.CreatedBy);

@@ -13,7 +13,8 @@ public class WorkingUnitConfiguration : IEntityTypeConfiguration<WorkingUnit>
         
         builder.Property(x => x.Name).HasMaxLength(256).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(1024);
-        builder.Property(x => x.Identifier).HasMaxLength(32).HasColumnType("char(32)");
+        builder.Property(x => x.Identifier).HasMaxLength(32).HasColumnType("char(32)")
+            .HasConversion(x => x, x => x != null ? x.Trim() : null);
         builder.Property(x => x.Note).HasMaxLength(1024);
         builder.Property(x => x.CreatedTime).HasPrecision(0);
         builder.Property(x => x.LastUpdatedTime).HasPrecision(0);

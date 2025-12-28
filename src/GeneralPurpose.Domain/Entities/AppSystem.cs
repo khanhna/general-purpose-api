@@ -10,4 +10,5 @@ public class AppSystem : Entity<int>
 
     public List<WorkingUnit>? WorkingUnits { get; set; }
     public List<ImageCompositionConfig>? ImageCompositionConfigs { get; set; }
+    public List<ImageLutCubeSetting>? ImageLutCubeSettings { get; set; }
 }

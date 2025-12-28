@@ -19,6 +19,7 @@ public class WorkingUnitController: BaseController
         [FromServices] IRepository<WorkingUnit, int> workingUnitRepository,
         [FromServices] IRepository<ImageVintageProcessConfig, int> imageVintageProcessConfigRepository,
         [FromServices] IRepository<ImageCompositionConfig, int> imageCompositionConfigRepository,
+        [FromServices] IRepository<ImageLutCubeSetting, int> lutCubeSettingRepository,
         CancellationToken cancellationToken)
     {
         var workingUnitId = HttpContext.GetClientMachineHeader();
@@ -27,6 +28,7 @@ public class WorkingUnitController: BaseController
 
         var workingUnit = await workingUnitRepository.FirstOrDefaultAsync(x => x.Identifier == workingUnitId,
             x => x.Include(w => w.AppSystem).ThenInclude(a => a.ImageCompositionConfigs)
+                .Include(w => w.AppSystem).ThenInclude(a => a.ImageLutCubeSettings)
                 .Include(w => w.ImageVintageProcessConfigs), true, cancellationToken);
         if (workingUnit?.Id == null) return BadRequest($"Working unit {workingUnitId} is not found!.");
 
@@ -34,8 +36,12 @@ public class WorkingUnitController: BaseController
             x => x.WorkingUnitId == null && x.IsActive, isNoTracking: true, cancellationToken: cancellationToken);
         var generalCompositionConfigs = await imageCompositionConfigRepository.ListAsync(
             x => x.AppSystemId == null && x.IsActive, isNoTracking: true, cancellationToken: cancellationToken);
+        var generalLutCubeConfigs = await lutCubeSettingRepository.ListAsync(x => x.AppSystemId == null && x.IsActive,
+            isNoTracking: true, cancellationToken: cancellationToken);
+        
         var generalVintageConfigCodes = generalVintageConfigs?.Select(x => x.Code).ToHashSet() ?? [];
         var generalCompositionConfigFileNames = generalCompositionConfigs?.Select(x => x.FileName).ToHashSet() ?? [];
+        var generalLutCubeConfigFileNames = generalLutCubeConfigs?.Select(x => x.FileName).ToHashSet() ?? [];
 
         for (var i = 0; i < generalVintageConfigs!.Count; i++)
         {
@@ -64,6 +70,20 @@ public class WorkingUnitController: BaseController
         generalCompositionConfigs.AddRange(
             workingUnit?.AppSystem?.ImageCompositionConfigs?.Where(x =>
                 !generalCompositionConfigFileNames.Contains(x.FileName) && x.IsActive) ?? []);
+
+        for (var i = 0; i < generalLutCubeConfigs!.Count; i++)
+        {
+            var specificConfig =
+                workingUnit?.AppSystem?.ImageLutCubeSettings?.FirstOrDefault(x =>
+                    x.FileName == generalCompositionConfigs[i].FileName && x.IsActive);
+            if(specificConfig?.Id == null) continue;
+            
+            generalLutCubeConfigs[i] = specificConfig;
+        }
+        
+        generalLutCubeConfigs.AddRange(
+            workingUnit?.AppSystem?.ImageLutCubeSettings?.Where(x =>
+                !generalLutCubeConfigFileNames.Contains(x.FileName) && x.IsActive) ?? []);
         
         return Ok(new WorkingUnitStatusResponse
         {
@@ -100,10 +120,21 @@ public class WorkingUnitController: BaseController
                         {
                             BlendMode = x.BlendMode,
                             FileName = x.FileName,
+                            Url = x.Url,
                             Feather = x.Feather,
                             Threshold = x.Threshold,
                             Opacity = x.Opacity,
                             InvertThreshold = x.InvertThreshold,
+                            LastUpdatedTime = x.LastUpdatedTime
+                        }).ToArray()
+                    : [],
+            ImageLutConfigs = workingUnit.VintageProcessEnabled && generalLutCubeConfigs.Count > 0
+                    ? generalLutCubeConfigs.Where(x => x.IsActive).Select(x => 
+                        new ImageLutConfigResponse
+                        {
+                            Code = x.Code,
+                            FileName = x.FileName,
+                            Url = x.Url,
                             LastUpdatedTime = x.LastUpdatedTime
                         }).ToArray()
                     : []
