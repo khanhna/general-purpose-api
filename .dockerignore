@@ -4,4 +4,6 @@
 .idea/
 k8s-deploy/
 docker-compose.yml
+appsettings.json
 appsettings.Production.json
+appsettings.Development.json

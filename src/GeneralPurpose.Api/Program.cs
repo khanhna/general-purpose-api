@@ -4,7 +4,7 @@ using GeneralPurpose.Api.Extensions;
 using GeneralPurpose.Api.Filters;
 using GeneralPurpose.Application.Commands.FunStudio;
 using GeneralPurpose.Infrastructure.Utilities;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Exceptions;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
